@@ -11,7 +11,8 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
-from sqlalchemy import text  # ← ADD THIS
+from sqlalchemy import text 
+import httpx
 
 # Load environment variables from .env file
 load_dotenv()
@@ -132,7 +133,7 @@ def extract_data_with_ai(text):
         """
         
         # Call OpenAI API
-        client = OpenAI(api_key=openai_api_key)  
+        client = OpenAI(api_key=openai_api_key, http_client=httpx.Client())
         response = client.chat.completions.create(  
             model="gpt-3.5-turbo", 
             messages=[{"role": "user", "content": prompt}],
