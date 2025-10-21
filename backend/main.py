@@ -165,7 +165,7 @@ def extract_data_with_ai(text):
 def transcribe_audio(audio_file, filename=None):
     """Transcribe audio file to text using OpenAI Whisper"""
     try:
-        client = OpenAI(api_key=openai_api_key)
+        client = OpenAI(api_key=openai_api_key, http_client=httpx.Client())
 
         # Reset file pointer and read as bytes
         audio_file.seek(0)
