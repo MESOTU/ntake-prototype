@@ -82,7 +82,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "https://intake-prototype-h85w6140b-mesotus-projects.vercel.app"
+        "https://intake-prototype-h85w6140b-mesotus-projects.vercel.app",
         "https://*.vercel.app"  # Allow ALL Vercel domains
     ],
     allow_credentials=True,
