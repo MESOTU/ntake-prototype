@@ -84,12 +84,14 @@ function App() {
     formData.append('file', audioFile);
 
     try {
+      console.log('Sending audio to backend...');
       const response = await fetch('http://localhost:8000/parse-voice', {
         method: 'POST',
         body: formData,
       });
-
+      console.log('Audio response status:', response.status);
       const data = await response.json();
+      console.log('Audio response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Audio processing failed');
@@ -99,6 +101,7 @@ function App() {
       setExtractedData(data.extracted_data);
       
     } catch (err) {
+      console.error('Audio upload error:', err);
       setError(err instanceof Error ? err.message : 'Audio processing failed');
       setStatus('');
     }

@@ -96,6 +96,46 @@ def extract_data_with_ai(text):
         print(f"❌ Error with AI extraction: {e}")
         return None
 
+# Whisper Transcription Function
+def transcribe_audio(audio_file, filename=None):
+    """Transcribe audio file to text using OpenAI Whisper"""
+    try:
+        client = OpenAI(api_key=openai_api_key)
+
+        # Reset file pointer and read as bytes
+        audio_file.seek(0)
+        audio_bytes = audio_file.read()
+        
+        # Determine content type based on filename
+        if filename and filename.lower().endswith('.mp4'):
+            content_type = "audio/mp4"
+        elif filename and filename.lower().endswith('.m4a'):
+            content_type = "audio/mp4" 
+        elif filename and filename.lower().endswith('.mp3'):
+            content_type = "audio/mpeg"
+        elif filename and filename.lower().endswith('.wav'):
+            content_type = "audio/wav"
+        else:
+            content_type = "audio/mpeg"  # Default
+        
+        # Use the tuple format
+        file_tuple = ("audio_file", audio_bytes, content_type)
+
+        
+        # Real Whisper API call
+        response = client.audio.transcriptions.create(
+            model="whisper-1", 
+            file=file_tuple,  # ← CHANGE THIS from audio_file to file_tuple
+            response_format="text"
+        )
+        
+        print("✅ Audio transcribed successfully")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error transcribing audio: {e}")
+        return None
+
 @app.get("/")
 def read_root():
     return {"message": "Backend is working!"}
@@ -125,6 +165,7 @@ async def parse_pdf(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": f"Processing failed: {str(e)}"}
 
+# Parse Voice Endpoint
 @app.post("/parse-voice")
 async def parse_voice(file: UploadFile = File(...)):
     # Basic validation
@@ -133,20 +174,22 @@ async def parse_voice(file: UploadFile = File(...)):
         return {"error": "Please upload an audio file (MP3, WAV, M4A, OGG)"}
     
     try:
-        # For now, return mock data (same as PDF but different message)
-        # Later we'll add Whisper API here
+        # Step 1: Transcribe audio to text
+        transcript = transcribe_audio(file.file, file.filename)
+        if not transcript:
+            return {"error": "Could not transcribe audio"}
+        
+        # Step 2: Use AI to extract structured data
+        extracted_data = extract_data_with_ai(transcript)
+        
         return {
             "status": "success", 
-            "message": "Audio file received! (Mock data - Whisper API coming soon)",
-            "extracted_data": {
-                "patient_name": "Voice Test Patient",
-                "date_of_birth": "1975-08-22", 
-                "primary_diagnosis": "Audio-recorded Condition"
-            }
+            "message": "Audio processed successfully!",
+            "extracted_data": extracted_data
         }
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing audio: {str(e)}")
+        return {"error": f"Audio processing failed: {str(e)}"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
