@@ -40,6 +40,28 @@ class Patient(Base):
 # Create all database tables
 Base.metadata.create_all(bind=engine)
 
+# DEBUG FUNCTION 
+def debug_database_connection():
+    """Debug database connection details"""
+    print(f"🔍 DATABASE_URL: {database_url}")
+    try:
+        db = SessionLocal()
+        result = db.execute(text("SELECT current_database();"))
+        db_name = result.scalar()
+        print(f"✅ Connected to database: {db_name}")
+        
+        # Test if patients table exists and count records
+        result = db.execute(text("SELECT COUNT(*) FROM patients;"))
+        patient_count = result.scalar()
+        print(f"📊 Patients in database: {patient_count}")
+        
+        db.close()
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+
+# Call it after your database setup
+debug_database_connection()
+
 def test_database_connection():
     """Test if database connection is working"""
     try:
