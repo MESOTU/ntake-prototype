@@ -6,6 +6,12 @@ import os
 from dotenv import load_dotenv
 import openai
 from openai import OpenAI 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
+from sqlalchemy import text  # ← ADD THIS
 
 # Load environment variables from .env file
 load_dotenv()
@@ -14,6 +20,39 @@ load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
+
+# Database setup
+database_url = os.getenv("DATABASE_URL")
+engine = create_engine(database_url)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Patient data model
+class Patient(Base):
+    __tablename__ = "patients"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    patient_name = Column(String)
+    date_of_birth = Column(String)
+    primary_diagnosis = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# Create all database tables
+Base.metadata.create_all(bind=engine)
+
+def test_database_connection():
+    """Test if database connection is working"""
+    try:
+        # Try to create a session
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        print("✅ Database connection successful")
+        db.close()
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+
+# Test the connection
+test_database_connection()
 
 # Enable CORS
 app.add_middleware(
@@ -155,6 +194,21 @@ async def parse_pdf(file: UploadFile = File(...)):
         
         # Step 2: Use AI to extract structured data
         extracted_data = extract_data_with_ai(text)
+
+        # Step 3: Save to database ← ADD HERE
+        db = SessionLocal()
+        try:
+            db_patient = Patient(
+                patient_name=extracted_data["patient_name"],
+                date_of_birth=extracted_data["date_of_birth"],
+                primary_diagnosis=extracted_data["primary_diagnosis"]
+            )
+            db.add(db_patient)
+            db.commit()
+            db.refresh(db_patient)
+            print(f"✅ Patient saved to database: {extracted_data['patient_name']}")
+        finally:
+            db.close()        
         
         return {
             "status": "success", 
@@ -169,7 +223,7 @@ async def parse_pdf(file: UploadFile = File(...)):
 @app.post("/parse-voice")
 async def parse_voice(file: UploadFile = File(...)):
     # Basic validation
-    allowed_types = ['.mp3', '.wav', '.m4a', '.ogg']
+    allowed_types = ['.mp3', '.wav', '.m4a', '.ogg', '.mp4']
     if not any(file.filename.lower().endswith(ext) for ext in allowed_types):
         return {"error": "Please upload an audio file (MP3, WAV, M4A, OGG)"}
     
