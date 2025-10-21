@@ -235,6 +235,21 @@ async def parse_voice(file: UploadFile = File(...)):
         
         # Step 2: Use AI to extract structured data
         extracted_data = extract_data_with_ai(transcript)
+
+        # Step 3: Save to database ← ADD THIS BLOCK
+        db = SessionLocal()
+        try:
+            db_patient = Patient(
+                patient_name=extracted_data["patient_name"],
+                date_of_birth=extracted_data["date_of_birth"],
+                primary_diagnosis=extracted_data["primary_diagnosis"]
+            )
+            db.add(db_patient)
+            db.commit()
+            db.refresh(db_patient)
+            print(f"✅ Patient saved to database: {extracted_data['patient_name']}")
+        finally:
+            db.close()       
         
         return {
             "status": "success", 
