@@ -191,7 +191,7 @@ function App() {
         )}
 
         {/* Extracted Data Display */}
-        {extractedData.patient_name && (
+        {extractedData && extractedData.patient_name && (
           <Box sx={{ mt: 3, p: 2, border: '1px solid #ddd', borderRadius: 1 }}>
             <Typography variant="h6" gutterBottom>
               Extracted Data:
