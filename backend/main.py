@@ -260,5 +260,34 @@ async def parse_voice(file: UploadFile = File(...)):
     except Exception as e:
         return {"error": f"Audio processing failed: {str(e)}"}
 
+# Get all patients endpoint
+@app.get("/patients")
+def get_patients():
+    """Get all saved patients from the database"""
+    try:
+        db = SessionLocal()
+        patients = db.query(Patient).order_by(Patient.created_at.desc()).all()
+        db.close()
+        
+        # Convert to list of dictionaries for JSON response
+        patient_list = []
+        for patient in patients:
+            patient_list.append({
+                "id": patient.id,
+                "patient_name": patient.patient_name,
+                "date_of_birth": patient.date_of_birth,
+                "primary_diagnosis": patient.primary_diagnosis,
+                "created_at": patient.created_at.isoformat()
+            })
+        
+        return {
+            "status": "success",
+            "count": len(patient_list),
+            "patients": patient_list
+        }
+        
+    except Exception as e:
+        return {"error": f"Failed to fetch patients: {str(e)}"}        
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

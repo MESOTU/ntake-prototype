@@ -11,6 +11,7 @@ function App() {
     date_of_birth: '',
     primary_diagnosis: ''
   });
+  const [patients, setPatients] = useState<any[]>([]); // ← ADD THIS
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -51,7 +52,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://localhost:8000/parse-pdf', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/parse-pdf`, {
         method: 'POST',
         body: formData,
       });
@@ -85,7 +86,7 @@ function App() {
 
     try {
       console.log('Sending audio to backend...');
-      const response = await fetch('http://localhost:8000/parse-voice', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/parse-voice`, {
         method: 'POST',
         body: formData,
       });
@@ -104,6 +105,19 @@ function App() {
       console.error('Audio upload error:', err);
       setError(err instanceof Error ? err.message : 'Audio processing failed');
       setStatus('');
+    }
+  };
+
+  // ← ADD THIS FUNCTION
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/patients`);
+      const data = await response.json();
+      if (data.status === 'success') {
+        setPatients(data.patients);
+      }
+    } catch (err) {
+      console.error('Failed to fetch patients:', err);
     }
   };
 
@@ -160,7 +174,7 @@ function App() {
             Select Audio File
             <input
               type="file"
-              accept=".mp3,.wav,.m4a,.ogg"
+              accept=".mp3,.wav,.m4a,.ogg,.mp4"
               hidden
               onChange={handleAudioFileChange}
             />
@@ -179,6 +193,16 @@ function App() {
             Process Audio Recording
           </Button>
         </Box>
+
+        {/* ← ADD THIS BUTTON */}
+        <Button 
+          variant="outlined" 
+          onClick={fetchPatients}
+          fullWidth
+          sx={{ mt: 3 }}
+        >
+          View Saved Patients
+        </Button>
 
         {/* Status Messages */}
         {status && (
@@ -220,6 +244,25 @@ function App() {
               margin="normal"
               InputProps={{ readOnly: true }}
             />
+          </Box>
+        )}
+
+        {/* ← ADD THIS PATIENT LIST SECTION */}
+        {patients.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Saved Patients ({patients.length})
+            </Typography>
+            {patients.map((patient) => (
+              <Box key={patient.id} sx={{ p: 2, border: '1px solid #ddd', borderRadius: 1, mb: 1 }}>
+                <Typography><strong>Name:</strong> {patient.patient_name}</Typography>
+                <Typography><strong>DOB:</strong> {patient.date_of_birth}</Typography>
+                <Typography><strong>Diagnosis:</strong> {patient.primary_diagnosis}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Added: {new Date(patient.created_at).toLocaleDateString()}
+                </Typography>
+              </Box>
+            ))}
           </Box>
         )}
       </Box>
