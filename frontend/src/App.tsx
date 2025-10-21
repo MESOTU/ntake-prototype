@@ -52,7 +52,7 @@ function App() {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/parse-pdf`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://intake-prototype-backend.onrender.com'}/parse-pdf`, {
         method: 'POST',
         body: formData,
       });
@@ -86,7 +86,7 @@ function App() {
 
     try {
       console.log('Sending audio to backend...');
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/parse-voice`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://intake-prototype-backend.onrender.com'}/parse-voice`, {
         method: 'POST',
         body: formData,
       });
@@ -111,7 +111,7 @@ function App() {
   // ← ADD THIS FUNCTION
   const fetchPatients = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/patients`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://intake-prototype-backend.onrender.com'}/patients`);
       const data = await response.json();
       if (data.status === 'success') {
         setPatients(data.patients);
