@@ -271,7 +271,7 @@ def transcribe_audio(audio_file, filename=None):
 def read_root():
     return {"message": "Backend is working!"}
 
-# Parse PDF Endpoint - WITH COMPREHENSIVE ERROR HANDLING
+# Parse PDF Endpoint - WITH CRASH PROTECTION
 @app.post("/parse-pdf")
 async def parse_pdf(file: UploadFile = File(...)):
     print("🟢 /parse-pdf endpoint called - START")
@@ -279,7 +279,11 @@ async def parse_pdf(file: UploadFile = File(...)):
         # Simple check
         if not file.filename.endswith('.pdf'):
             print("❌ Not a PDF file")
-            return {"error": "Please upload a PDF file"}
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Please upload a PDF file"},
+                headers={"Access-Control-Allow-Origin": "https://intake-prototype.vercel.app"}
+            )
         
         print(f"📁 Processing file: {file.filename}")
         
@@ -288,7 +292,11 @@ async def parse_pdf(file: UploadFile = File(...)):
         text = extract_text_from_pdf(file.file)
         if not text:
             print("❌ No text extracted from PDF")
-            return {"error": "Could not extract text from PDF"}
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Could not extract text from PDF"},
+                headers={"Access-Control-Allow-Origin": "https://intake-prototype.vercel.app"}
+            )
         
         print(f"✅ Extracted {len(text)} characters from PDF")
         
@@ -297,7 +305,11 @@ async def parse_pdf(file: UploadFile = File(...)):
         extracted_data = extract_data_with_ai(text)
         if not extracted_data:
             print("❌ AI extraction failed")
-            return {"error": "AI data extraction failed"}
+            return JSONResponse(
+                status_code=400,
+                content={"error": "AI data extraction failed"},
+                headers={"Access-Control-Allow-Origin": "https://intake-prototype.vercel.app"}
+            )
         
         print(f"✅ AI extracted data: {extracted_data}")
 
@@ -321,17 +333,25 @@ async def parse_pdf(file: UploadFile = File(...)):
             db.close()        
         
         print("🎉 /parse-pdf completed successfully")
-        return {
-            "status": "success", 
-            "message": "PDF processed successfully!",
-            "extracted_data": extracted_data
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success", 
+                "message": "PDF processed successfully!",
+                "extracted_data": extracted_data
+            },
+            headers={"Access-Control-Allow-Origin": "https://intake-prototype.vercel.app"}
+        )
         
     except Exception as e:
-        print(f"❌ /parse-pdf CRASHED: {e}")
+        print(f"💥 TOP-LEVEL CRASH in /parse-pdf: {e}")
         print("🔍 Full traceback:")
         traceback.print_exc()
-        return {"error": f"Processing failed: {str(e)}"}
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Server error during PDF processing: {str(e)}"},
+            headers={"Access-Control-Allow-Origin": "https://intake-prototype.vercel.app"}
+        )
 
 # Parse Voice Endpoint
 @app.post("/parse-voice")
