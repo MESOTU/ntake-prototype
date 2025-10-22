@@ -105,114 +105,80 @@ def test_openai_connection():
 test_openai_connection()
 openai.api_key = openai_api_key
 
-# OCR Text Extraction Function (UPDATED - with EasyOCR fallback)
+# OCR Text Extraction Function (EasyOCR only)
 def extract_text_with_ocr(pdf_file):
-    """Extract text from image-based PDFs using pytesseract with EasyOCR fallback"""
+    """Extract text from image-based PDFs using EasyOCR"""
     try:
-        # First try: pytesseract (faster if available)
-        try:
-            from pdf2image import convert_from_bytes
-            import pytesseract
+        import easyocr
+        from pdf2image import convert_from_bytes
+        import numpy as np
+        
+        print("🔍 Starting EasyOCR processing...")
+        
+        # Initialize EasyOCR reader (models should already be cached from build)
+        reader = easyocr.Reader(['en'], gpu=False)
+        
+        # Convert PDF to images
+        pdf_file.seek(0)
+        images = convert_from_bytes(pdf_file.read(), dpi=200)  # Lower DPI for speed
+        
+        # OCR each page
+        text = ""
+        for i, image in enumerate(images):
+            print(f"🔍 EasyOCR processing page {i+1}/{len(images)}")
             
-            # Convert PDF to images
-            pdf_file.seek(0)
-            images = convert_from_bytes(pdf_file.read(), dpi=300)
+            # Convert PIL image to numpy array for EasyOCR
+            image_np = np.array(image)
             
-            # OCR each page
-            text = ""
-            for i, image in enumerate(images):
-                print(f"🔍 OCR processing page {i+1}/{len(images)}")
-                
-                # Perform OCR with pytesseract
-                page_text = pytesseract.image_to_string(image)
-                text += f"--- Page {i+1} ---\n{page_text}\n"
-            
-            print(f"✅ pytesseract extracted {len(text)} characters")
-            return text.strip()
-            
-        except Exception as pytesseract_error:
-            print(f"⚠️ pytesseract failed: {pytesseract_error}")
-            print("🔄 Falling back to EasyOCR...")
-            
-            # Second try: EasyOCR (has built-in OCR engine)
-            import easyocr
-            from pdf2image import convert_from_bytes
-            import numpy as np
-            
-            # Initialize EasyOCR reader
-            reader = easyocr.Reader(['en'])
-            
-            # Convert PDF to images
-            pdf_file.seek(0)
-            images = convert_from_bytes(pdf_file.read())
-            
-            # OCR each page
-            text = ""
-            for i, image in enumerate(images):
-                print(f"🔍 EasyOCR processing page {i+1}/{len(images)}")
-                
-                # Convert PIL image to numpy array for EasyOCR
-                image_np = np.array(image)
-                
-                # Perform OCR
-                results = reader.readtext(image_np, detail=0)
-                page_text = " ".join(results)
-                text += f"--- Page {i+1} ---\n{page_text}\n"
-            
-            print(f"✅ EasyOCR extracted {len(text)} characters")
-            return text.strip()
+            # Perform OCR
+            results = reader.readtext(image_np, detail=0)
+            page_text = " ".join(results)
+            text += f"--- Page {i+1} ---\n{page_text}\n"
+        
+        print(f"✅ EasyOCR extracted {len(text)} characters")
+        return text.strip()
         
     except Exception as e:
-        print(f"❌ All OCR methods failed: {e}")
+        print(f"❌ EasyOCR failed: {e}")
+        import traceback
+        traceback.print_exc()
         return ""
-
 
 # PDF Text Extraction function (UPDATED WITH OCR FALLBACK)
 def extract_text_from_pdf(pdf_file):
-    """Extract text from PDF file - tries text extraction first, then OCR for images"""
-    try:
-        import pdfplumber
-        
-        print("🔍 Starting PDF text extraction...")
-        
-        # First try: Regular text extraction
-        text = ""
-        pdf_file.seek(0)  # Reset file pointer
-        with pdfplumber.open(pdf_file) as pdf:
-            print(f"📄 PDF has {len(pdf.pages)} pages")
-            for i, page in enumerate(pdf.pages):
-                page_text = page.extract_text()
-                print(f"📖 Page {i+1} text length: {len(page_text) if page_text else 0}")
-                if page_text:
-                    text += page_text + "\n"
-        
-        print(f"📊 Initial text extraction got {len(text)} characters")
-        
-        # Second try: If no text found, use OCR
-        if not text.strip():
-            print("📄 No text found in PDF - attempting OCR...")
-            text = extract_text_with_ocr(pdf_file)
-        else:
-            print("✅ Text extraction successful, skipping OCR")
-            
-        # Third try: If OCR also failed, return error
-        if not text.strip():
-            print("❌ Both text extraction and OCR failed")
-            return None
-            
-        print(f"✅ Final extracted {len(text)} characters from PDF")
-        print(f"📝 First 200 chars: {text[:200]}...")
-        return text
-        
-    except Exception as e:
-        print(f"❌ Error extracting text from PDF: {e}")
-        # Final fallback: Try OCR on the original error
-        try:
-            print("🔄 Falling back to OCR after initial failure...")
-            return extract_text_with_ocr(pdf_file)
-        except Exception as ocr_error:
-            print(f"❌ OCR fallback also failed: {ocr_error}")
-            return None
+       """Extract text from PDF file - tries text extraction first, then OCR for images"""
+       try:
+           import pdfplumber
+           
+           print("🔍 Starting PDF text extraction...")
+           
+           # First try: Regular text extraction
+           text = ""
+           pdf_file.seek(0)
+           with pdfplumber.open(pdf_file) as pdf:
+               print(f"📄 PDF has {len(pdf.pages)} pages")
+               for i, page in enumerate(pdf.pages):
+                   page_text = page.extract_text()
+                   if page_text:
+                       text += page_text + "\n"
+           
+           print(f"📊 Initial text extraction got {len(text)} characters")
+           
+           # If no text found, use OCR
+           if not text.strip():
+               print("📄 No text found - attempting OCR...")
+               text = extract_text_with_ocr(pdf_file)
+           
+           if not text.strip():
+               print("❌ Both text extraction and OCR failed")
+               return None
+               
+           print(f"✅ Final extracted {len(text)} characters")
+           return text
+           
+       except Exception as e:
+           print(f"❌ Error: {e}")
+           return None
 
 # AI Data Extraction Function
 def extract_data_with_ai(text):
