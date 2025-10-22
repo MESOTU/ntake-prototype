@@ -13,6 +13,7 @@ from sqlalchemy import Column, Integer, String, DateTime
 from datetime import datetime
 from sqlalchemy import text 
 import httpx
+import traceback
 
 # Load environment variables from .env file
 load_dotenv()
@@ -304,23 +305,38 @@ def transcribe_audio(audio_file, filename=None):
 def read_root():
     return {"message": "Backend is working!"}
 
-# Parse PDF Endpoint
+# Parse PDF Endpoint - WITH COMPREHENSIVE ERROR HANDLING
 @app.post("/parse-pdf")
 async def parse_pdf(file: UploadFile = File(...)):
-    # Simple check
-    if not file.filename.endswith('.pdf'):
-        return {"error": "Please upload a PDF file"}
-    
+    print("🟢 /parse-pdf endpoint called - START")
     try:
+        # Simple check
+        if not file.filename.endswith('.pdf'):
+            print("❌ Not a PDF file")
+            return {"error": "Please upload a PDF file"}
+        
+        print(f"📁 Processing file: {file.filename}")
+        
         # Step 1: Extract text from PDF
+        print("🔍 Step 1: Extracting text from PDF...")
         text = extract_text_from_pdf(file.file)
         if not text:
+            print("❌ No text extracted from PDF")
             return {"error": "Could not extract text from PDF"}
         
+        print(f"✅ Extracted {len(text)} characters from PDF")
+        
         # Step 2: Use AI to extract structured data
+        print("🤖 Step 2: Using AI to extract data...")
         extracted_data = extract_data_with_ai(text)
+        if not extracted_data:
+            print("❌ AI extraction failed")
+            return {"error": "AI data extraction failed"}
+        
+        print(f"✅ AI extracted data: {extracted_data}")
 
         # Step 3: Save to database
+        print("💾 Step 3: Saving to database...")
         db = SessionLocal()
         try:
             db_patient = Patient(
@@ -332,9 +348,13 @@ async def parse_pdf(file: UploadFile = File(...)):
             db.commit()
             db.refresh(db_patient)
             print(f"✅ Patient saved to database: {extracted_data['patient_name']}")
+        except Exception as db_error:
+            print(f"❌ Database save failed: {db_error}")
+            # Continue even if database fails
         finally:
             db.close()        
         
+        print("🎉 /parse-pdf completed successfully")
         return {
             "status": "success", 
             "message": "PDF processed successfully!",
@@ -342,6 +362,9 @@ async def parse_pdf(file: UploadFile = File(...)):
         }
         
     except Exception as e:
+        print(f"❌ /parse-pdf CRASHED: {e}")
+        print("🔍 Full traceback:")
+        traceback.print_exc()
         return {"error": f"Processing failed: {str(e)}"}
 
 # Parse Voice Endpoint
@@ -416,4 +439,5 @@ def get_patients():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))  # Use 10000 as default
+    print(f"🚀 Starting server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
