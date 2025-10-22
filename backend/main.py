@@ -85,6 +85,7 @@ app.add_middleware(
         "http://localhost:5176",
         "https://intake-prototype-h85w6140b-mesotus-projects.vercel.app",
         "https://intake-prototype.vercel.app",
+        "https://intake-prototype-3sa2uwec3-mesotus-projects.vercel.app/",
         "https://*.vercel.app"  # Allow ALL Vercel domains
     ],
     allow_credentials=True,
