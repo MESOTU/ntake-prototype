@@ -415,4 +415,5 @@ def get_patients():
         return {"error": f"Failed to fetch patients: {str(e)}"}        
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Render runs uvicorn automatically, no need to call it here
+    pass
