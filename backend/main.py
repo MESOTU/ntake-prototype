@@ -86,6 +86,8 @@ app.add_middleware(
         "https://intake-prototype-h85w6140b-mesotus-projects.vercel.app",
         "https://intake-prototype.vercel.app",
         "https://intake-prototype-3sa2uwec3-mesotus-projects.vercel.app",
+        "https://intake-prototype-git-main-mesotus-projects.vercel.app",
+        "https://intake-prototype-nlh6gz65z-mesotus-projects.vercel.app",
         "https://*.vercel.app"  # Allow ALL Vercel domains
     ],
     allow_credentials=True,
