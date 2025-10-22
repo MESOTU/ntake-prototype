@@ -414,5 +414,12 @@ def get_patients():
     except Exception as e:
         return {"error": f"Failed to fetch patients: {str(e)}"}        
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+# Keep the application running
+if __name__ == "__main__":
+    print("🚀 Application started successfully")
+    # Just keep the process alive - Render will handle the server
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("🛑 Application shutting down")
