@@ -102,31 +102,65 @@ def test_openai_connection():
 test_openai_connection()
 openai.api_key = openai_api_key
 
-# OCR Text Extraction Function (UPDATED - using pytesseract instead of EasyOCR)
+# OCR Text Extraction Function (UPDATED - with EasyOCR fallback)
 def extract_text_with_ocr(pdf_file):
-    """Extract text from image-based PDFs using pytesseract"""
+    """Extract text from image-based PDFs using pytesseract with EasyOCR fallback"""
     try:
-        from pdf2image import convert_from_bytes
-        import pytesseract
-        
-        # Convert PDF to images
-        pdf_file.seek(0)
-        images = convert_from_bytes(pdf_file.read(), dpi=300)
-        
-        # OCR each page
-        text = ""
-        for i, image in enumerate(images):
-            print(f"🔍 OCR processing page {i+1}/{len(images)}")
+        # First try: pytesseract (faster if available)
+        try:
+            from pdf2image import convert_from_bytes
+            import pytesseract
             
-            # Perform OCR with pytesseract
-            page_text = pytesseract.image_to_string(image)
-            text += f"--- Page {i+1} ---\n{page_text}\n"
-        
-        print(f"✅ OCR extracted {len(text)} characters")
-        return text.strip()
+            # Convert PDF to images
+            pdf_file.seek(0)
+            images = convert_from_bytes(pdf_file.read(), dpi=300)
+            
+            # OCR each page
+            text = ""
+            for i, image in enumerate(images):
+                print(f"🔍 OCR processing page {i+1}/{len(images)}")
+                
+                # Perform OCR with pytesseract
+                page_text = pytesseract.image_to_string(image)
+                text += f"--- Page {i+1} ---\n{page_text}\n"
+            
+            print(f"✅ pytesseract extracted {len(text)} characters")
+            return text.strip()
+            
+        except Exception as pytesseract_error:
+            print(f"⚠️ pytesseract failed: {pytesseract_error}")
+            print("🔄 Falling back to EasyOCR...")
+            
+            # Second try: EasyOCR (has built-in OCR engine)
+            import easyocr
+            from pdf2image import convert_from_bytes
+            import numpy as np
+            
+            # Initialize EasyOCR reader
+            reader = easyocr.Reader(['en'])
+            
+            # Convert PDF to images
+            pdf_file.seek(0)
+            images = convert_from_bytes(pdf_file.read())
+            
+            # OCR each page
+            text = ""
+            for i, image in enumerate(images):
+                print(f"🔍 EasyOCR processing page {i+1}/{len(images)}")
+                
+                # Convert PIL image to numpy array for EasyOCR
+                image_np = np.array(image)
+                
+                # Perform OCR
+                results = reader.readtext(image_np, detail=0)
+                page_text = " ".join(results)
+                text += f"--- Page {i+1} ---\n{page_text}\n"
+            
+            print(f"✅ EasyOCR extracted {len(text)} characters")
+            return text.strip()
         
     except Exception as e:
-        print(f"❌ OCR failed: {e}")
+        print(f"❌ All OCR methods failed: {e}")
         return ""
 
 
