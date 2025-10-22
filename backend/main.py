@@ -437,7 +437,7 @@ def get_patients():
     except Exception as e:
         return {"error": f"Failed to fetch patients: {str(e)}"}        
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Use 10000 as default
-    print(f"🚀 Starting server on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+#if __name__ == "__main__":
+ #   port = int(os.environ.get("PORT", 10000))  # Use 10000 as default
+ #   print(f"🚀 Starting server on port {port}")
+ #   uvicorn.run(app, host="0.0.0.0", port=port)
