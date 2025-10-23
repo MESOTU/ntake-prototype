@@ -88,8 +88,17 @@ test_database_connection()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:5170",
+        "http://localhost:5171",
+        "http://localhost:5172",
         "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
         "http://localhost:5176",
+        "http://localhost:5177",
+        "http://localhost:5178",
+        "http://localhost:5179",
+        "http://localhost:5180",
         "https://intake-prototype-h85w6140b-mesotus-projects.vercel.app",
         "https://intake-prototype.vercel.app",
         "https://intake-prototype-3sa2uwec3-mesotus-projects.vercel.app",
@@ -247,6 +256,74 @@ def extract_data_with_ai(text):
     except Exception as e:
         print(f"❌ Error with AI extraction: {e}")
         return None
+
+def extract_answers_for_questions(text):
+    """Extract answers for our 7 demo questions from text"""
+    try:
+        prompt = f"""
+        Analyze this text and extract specific information for these 7 questions:
+        
+        TEXT TO ANALYZE:
+        {text}
+        
+        QUESTIONS TO ANSWER:
+        1. Are you a new participant? (Answer: "Yes" or "No")
+        2. What diagnoses or conditions do you have? (List specific conditions)
+        3. How often do you get upset, angry, anxious, withdrawn? (Answer: "Never", "Rarely", "Occasionally", "Often", "Almost always")
+        4. How much support do you need to manage physical challenges? (0-10 number)
+        5. What are your living arrangements? (Describe living situation)
+        6. In the last 30 days, how much was your family impacted because of your disability? (Answer: "None", "Mild", "Moderate", "Severe", "Extreme", "Not Applicable")
+        7. If we were to score your impairment restrictions (0-5 scale with 0.5 increments)
+        
+        Return as JSON with these exact field names:
+        - "introduction.new_participant"
+        - "icf_impairment.diagnoses" 
+        - "wellbeing.frequency"
+        - "icf_impairment.mobility_support_level"
+        - "about_you.living_situation"
+        - "family.carer_wellbeing"
+        - "icf_impairment.score"
+        
+        For any information that is missing or unclear, use "Unknown".
+        """
+        
+        client = OpenAI(api_key=openai_api_key, http_client=httpx.Client())
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1
+        )
+        
+        result_text = response.choices[0].message.content
+        
+        import json
+        try:
+            extracted_data = json.loads(result_text)
+            print(f"✅ AI extracted answers: {extracted_data}")
+            return extracted_data
+        except json.JSONDecodeError:
+            print("❌ AI didn't return valid JSON:", result_text)
+            return {
+                "introduction.new_participant": "Unknown",
+                "icf_impairment.diagnoses": "Unknown",
+                "wellbeing.frequency": "Unknown",
+                "icf_impairment.mobility_support_level": "Unknown", 
+                "about_you.living_situation": "Unknown",
+                "family.carer_wellbeing": "Unknown",
+                "icf_impairment.score": "Unknown"
+            }
+        
+    except Exception as e:
+        print(f"❌ Error in extract_answers_for_questions: {e}")
+        return {
+            "introduction.new_participant": "Unknown",
+            "icf_impairment.diagnoses": "Unknown",
+            "wellbeing.frequency": "Unknown",
+            "icf_impairment.mobility_support_level": "Unknown",
+            "about_you.living_situation": "Unknown", 
+            "family.carer_wellbeing": "Unknown",
+            "icf_impairment.score": "Unknown"
+        }
 
 # Whisper Transcription Function
 def transcribe_audio(audio_file, filename=None):
@@ -429,6 +506,79 @@ async def parse_voice(file: UploadFile = File(...)):
         }
         
     except Exception as e:
+        return {"error": f"Audio processing failed: {str(e)}"}
+
+# Enhanced PDF parsing for specific questions
+@app.post("/parse-pdf-for-questions")
+async def parse_pdf_for_questions(file: UploadFile = File(...)):
+    print("🟢 /parse-pdf-for-questions endpoint called")
+    try:
+        if not file.filename.endswith('.pdf'):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Please upload a PDF file"}
+            )
+        
+        print(f"📁 Processing PDF for questions: {file.filename}")
+        
+        # Step 1: Extract text from PDF
+        text = extract_text_from_pdf(file.file)
+        if not text:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Could not extract text from PDF"}
+            )
+        
+        print(f"✅ Extracted {len(text)} characters from PDF")
+        
+        # Step 2: Extract answers for our specific questions
+        extracted_answers = extract_answers_for_questions(text)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "PDF processed for questions!",
+                "extracted_answers": extracted_answers
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Error in /parse-pdf-for-questions: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"PDF processing failed: {str(e)}"}
+        )
+
+# Enhanced audio parsing for specific questions
+@app.post("/parse-audio-for-questions")
+async def parse_audio_for_questions(file: UploadFile = File(...)):
+    print("🟢 /parse-audio-for-questions endpoint called")
+    try:
+        allowed_types = ['.mp3', '.wav', '.m4a', '.ogg', '.mp4']
+        if not any(file.filename.lower().endswith(ext) for ext in allowed_types):
+            return {"error": "Please upload an audio file"}
+        
+        print(f"📁 Processing audio for questions: {file.filename}")
+        
+        # Step 1: Transcribe audio to text
+        transcript = transcribe_audio(file.file, file.filename)
+        if not transcript:
+            return {"error": "Could not transcribe audio"}
+        
+        print(f"✅ Transcribed {len(transcript)} characters from audio")
+        
+        # Step 2: Extract answers for our specific questions
+        extracted_answers = extract_answers_for_questions(transcript)
+        
+        return {
+            "status": "success",
+            "message": "Audio processed for questions!",
+            "extracted_answers": extracted_answers
+        }
+        
+    except Exception as e:
+        print(f"❌ Error in /parse-audio-for-questions: {e}")
         return {"error": f"Audio processing failed: {str(e)}"}
 
 # Get all patients endpoint

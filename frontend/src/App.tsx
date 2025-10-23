@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Container, TextField, Box, Typography, Alert } from '@mui/material';
+import DemoPage from './DemoPage.tsx';
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -11,7 +12,13 @@ function App() {
     date_of_birth: '',
     primary_diagnosis: ''
   });
-  const [patients, setPatients] = useState<any[]>([]); // ← ADD THIS
+  const [patients, setPatients] = useState<any[]>([]);
+  const [currentView, setCurrentView] = useState<'main' | 'demo'>('main'); // ← ADD VIEW STATE
+
+  // If demo view, show DemoPage
+  if (currentView === 'demo') {
+    return <DemoPage />;
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -108,7 +115,6 @@ function App() {
     }
   };
 
-  // ← ADD THIS FUNCTION
   const fetchPatients = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://intake-prototype-backend.onrender.com'}/patients`);
@@ -128,6 +134,16 @@ function App() {
           Disability Care Intake Prototype
         </Typography>
         
+        {/* ADD DEMO BUTTON */}
+        <Button 
+          variant="outlined" 
+          onClick={() => setCurrentView('demo')}
+          fullWidth
+          sx={{ mb: 3 }}
+        >
+          🧪 Try AI Demo (7 Questions)
+        </Button>
+
         {/* PDF Upload Section */}
         <Box sx={{ mt: 3 }}>
           <Button
@@ -194,7 +210,6 @@ function App() {
           </Button>
         </Box>
 
-        {/* ← ADD THIS BUTTON */}
         <Button 
           variant="outlined" 
           onClick={fetchPatients}
@@ -247,7 +262,7 @@ function App() {
           </Box>
         )}
 
-        {/* ← ADD THIS PATIENT LIST SECTION */}
+        {/* Patient List Section */}
         {patients.length > 0 && (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h5" gutterBottom>
