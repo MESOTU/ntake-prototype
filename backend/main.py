@@ -129,20 +129,23 @@ def extract_text_from_pdf(pdf_file):
                 if page_text:
                     text += page_text + "\n"
            
-           print(f"📊 Initial text extraction got {len(text)} characters")
+        print(f"📊 Initial text extraction got {len(text)} characters")
 
-            # If no text found, use AWS Textract
-            if not text.strip():
-                print("📄 No text found - attempting AWS Textract...")
-                text = extract_text_with_textract(pdf_file)
+        # If no text found, use AWS Textract
+        if not text.strip():
+            print("📄 No text found - attempting AWS Textract...")
+            text = extract_text_with_textract(pdf_file)
 
-            if not text.strip():
-                print("❌ Both text extraction and AWS Textract failed")
-                return None
-           
-       except Exception as e:
-           print(f"❌ Error: {e}")
-           return None
+        if not text.strip():
+            print("❌ Both text extraction and AWS Textract failed")
+            return None
+            
+        print(f"✅ Final extracted {len(text)} characters")
+        return text
+            
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return None
 
 # Extract text using AWS Textract
 def extract_text_with_textract(pdf_file):
@@ -269,6 +272,22 @@ def transcribe_audio(audio_file, filename=None):
     except Exception as e:
         print(f"❌ Error transcribing audio: {e}")
         return None
+
+def test_textract_connection():
+    """Test if AWS Textract connection is working"""
+    try:
+        textract = boto3.client(
+            'textract',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_region
+        )
+        print("✅ AWS Textract client initialized successfully")
+    except Exception as e:
+        print(f"❌ AWS Textract connection failed: {e}")
+
+# Test the connection
+test_textract_connection()
 
 @app.get("/")
 def read_root():
@@ -424,23 +443,7 @@ def get_patients():
         }
         
     except Exception as e:
-        return {"error": f"Failed to fetch patients: {str(e)}"}  
-
-        def test_textract_connection():
-    """Test if AWS Textract connection is working"""
-    try:
-        textract = boto3.client(
-            'textract',
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=aws_region
-        )
-        print("✅ AWS Textract client initialized successfully")
-    except Exception as e:
-        print(f"❌ AWS Textract connection failed: {e}")
-
-# Test the connection
-test_textract_connection()      
+        return {"error": f"Failed to fetch patients: {str(e)}"}        
 
 #if __name__ == "__main__":
  #   port = int(os.environ.get("PORT", 10000))  # Use 10000 as default
