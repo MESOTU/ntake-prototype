@@ -14,6 +14,7 @@ from datetime import datetime
 from sqlalchemy import text 
 import httpx
 import traceback
+import boto3
 
 # Load environment variables from .env file
 load_dotenv()
@@ -22,6 +23,11 @@ load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
+
+# AWS configuration
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_REGION", "us-east-1")
 
 # Database setup
 database_url = os.getenv("DATABASE_URL")
@@ -105,48 +111,9 @@ def test_openai_connection():
 test_openai_connection()
 openai.api_key = openai_api_key
 
-# OCR Text Extraction Function (EasyOCR only)
-def extract_text_with_ocr(pdf_file):
-    """Extract text from image-based PDFs using EasyOCR"""
-    try:
-        import easyocr
-        from pdf2image import convert_from_bytes
-        import numpy as np
-        
-        print("🔍 Starting EasyOCR processing...")
-        
-        # Initialize EasyOCR reader (models should already be cached from build)
-        reader = easyocr.Reader(['en'], gpu=False)
-        
-        # Convert PDF to images
-        pdf_file.seek(0)
-        images = convert_from_bytes(pdf_file.read(), dpi=200)  # Lower DPI for speed
-        
-        # OCR each page
-        text = ""
-        for i, image in enumerate(images):
-            print(f"🔍 EasyOCR processing page {i+1}/{len(images)}")
-            
-            # Convert PIL image to numpy array for EasyOCR
-            image_np = np.array(image)
-            
-            # Perform OCR
-            results = reader.readtext(image_np, detail=0)
-            page_text = " ".join(results)
-            text += f"--- Page {i+1} ---\n{page_text}\n"
-        
-        print(f"✅ EasyOCR extracted {len(text)} characters")
-        return text.strip()
-        
-    except Exception as e:
-        print(f"❌ EasyOCR failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return ""
-
-# PDF Text Extraction function (UPDATED WITH OCR FALLBACK)
+# PDF Text Extraction function
 def extract_text_from_pdf(pdf_file):
-       """Extract text from PDF file - tries text extraction first, then OCR for images"""
+    """Extract text from PDF file - tries text extraction first, then AWS Textract for images"""
        try:
            import pdfplumber
            
@@ -163,22 +130,58 @@ def extract_text_from_pdf(pdf_file):
                        text += page_text + "\n"
            
            print(f"📊 Initial text extraction got {len(text)} characters")
-           
-           # If no text found, use OCR
-           if not text.strip():
-               print("📄 No text found - attempting OCR...")
-               text = extract_text_with_ocr(pdf_file)
-           
-           if not text.strip():
-               print("❌ Both text extraction and OCR failed")
-               return None
-               
-           print(f"✅ Final extracted {len(text)} characters")
-           return text
+
+            # If no text found, use AWS Textract
+            if not text.strip():
+                print("📄 No text found - attempting AWS Textract...")
+                text = extract_text_with_textract(pdf_file)
+
+            if not text.strip():
+                print("❌ Both text extraction and AWS Textract failed")
+                return None
            
        except Exception as e:
            print(f"❌ Error: {e}")
            return None
+
+# Extract text using AWS Textract
+def extract_text_with_textract(pdf_file):
+    """Extract text from image-based PDFs using AWS Textract"""
+    try:
+        print("🔍 Starting AWS Textract processing...")
+        
+        # Initialize Textract client with credentials
+        textract = boto3.client(
+            'textract',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_region
+        )
+        
+        # Read PDF file bytes
+        pdf_file.seek(0)
+        pdf_bytes = pdf_file.read()
+        
+        # Call Textract
+        response = textract.analyze_document(
+            Document={'Bytes': pdf_bytes},
+            FeatureTypes=['TABLES', 'FORMS']
+        )
+        
+        # Extract text from blocks
+        text = ""
+        for block in response['Blocks']:
+            if block['BlockType'] == 'LINE':
+                text += block['Text'] + "\n"
+        
+        print(f"✅ AWS Textract extracted {len(text)} characters")
+        return text.strip()
+        
+    except Exception as e:
+        print(f"❌ AWS Textract failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return ""
 
 # AI Data Extraction Function
 def extract_data_with_ai(text):
@@ -421,7 +424,23 @@ def get_patients():
         }
         
     except Exception as e:
-        return {"error": f"Failed to fetch patients: {str(e)}"}        
+        return {"error": f"Failed to fetch patients: {str(e)}"}  
+
+        def test_textract_connection():
+    """Test if AWS Textract connection is working"""
+    try:
+        textract = boto3.client(
+            'textract',
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=aws_region
+        )
+        print("✅ AWS Textract client initialized successfully")
+    except Exception as e:
+        print(f"❌ AWS Textract connection failed: {e}")
+
+# Test the connection
+test_textract_connection()      
 
 #if __name__ == "__main__":
  #   port = int(os.environ.get("PORT", 10000))  # Use 10000 as default
