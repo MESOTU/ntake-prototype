@@ -161,21 +161,36 @@ def extract_text_with_textract(pdf_file):
             region_name=aws_region
         )
         
-        # Read PDF file bytes
+        # Convert PDF to images first
+        from pdf2image import convert_from_bytes
+        import io
+        
+        print("📄 Converting PDF to images for Textract...")
         pdf_file.seek(0)
-        pdf_bytes = pdf_file.read()
+        images = convert_from_bytes(pdf_file.read(), dpi=200)
         
-        # Call Textract
-        response = textract.analyze_document(
-            Document={'Bytes': pdf_bytes},
-            FeatureTypes=['TABLES', 'FORMS']
-        )
-        
-        # Extract text from blocks
+        # Process each image with Textract
         text = ""
-        for block in response['Blocks']:
-            if block['BlockType'] == 'LINE':
-                text += block['Text'] + "\n"
+        for i, image in enumerate(images):
+            print(f"🔍 Textract processing page {i+1}/{len(images)}")
+            
+            # Convert image to bytes
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='JPEG')
+            img_byte_arr = img_byte_arr.getvalue()
+            
+            # Call Textract for image
+            response = textract.detect_document_text(
+                Document={'Bytes': img_byte_arr}
+            )
+            
+            # Extract text from blocks
+            page_text = ""
+            for block in response['Blocks']:
+                if block['BlockType'] == 'LINE':
+                    page_text += block['Text'] + "\n"
+            
+            text += f"--- Page {i+1} ---\n{page_text}\n"
         
         print(f"✅ AWS Textract extracted {len(text)} characters")
         return text.strip()
