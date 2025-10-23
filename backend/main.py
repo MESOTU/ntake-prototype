@@ -114,20 +114,20 @@ openai.api_key = openai_api_key
 # PDF Text Extraction function
 def extract_text_from_pdf(pdf_file):
     """Extract text from PDF file - tries text extraction first, then AWS Textract for images"""
-       try:
-           import pdfplumber
+    try:
+        import pdfplumber
            
-           print("🔍 Starting PDF text extraction...")
+        print("🔍 Starting PDF text extraction...")
            
-           # First try: Regular text extraction
-           text = ""
-           pdf_file.seek(0)
-           with pdfplumber.open(pdf_file) as pdf:
-               print(f"📄 PDF has {len(pdf.pages)} pages")
-               for i, page in enumerate(pdf.pages):
-                   page_text = page.extract_text()
-                   if page_text:
-                       text += page_text + "\n"
+        # First try: Regular text extraction
+        text = ""
+        pdf_file.seek(0)
+        with pdfplumber.open(pdf_file) as pdf:
+            print(f"📄 PDF has {len(pdf.pages)} pages")
+            for i, page in enumerate(pdf.pages):
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
            
            print(f"📊 Initial text extraction got {len(text)} characters")
 
