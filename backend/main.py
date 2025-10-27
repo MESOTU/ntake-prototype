@@ -258,23 +258,35 @@ def extract_data_with_ai(text):
         return None
 
 def extract_answers_for_questions(text):
-    """Extract answers for our 7 demo questions from text"""
+    """Extract answers for our 7 demo questions from text with enhanced understanding"""
     try:
         prompt = f"""
-        Analyze this text and extract specific information for these 7 questions:
-        
+        Analyze this medical conversation text and extract specific information for these 7 questions.
+        Use contextual understanding and medical knowledge to map terms appropriately.
+
         TEXT TO ANALYZE:
         {text}
-        
+
         QUESTIONS TO ANSWER:
-        1. Are you a new participant? (Answer: "Yes" or "No")
-        2. What diagnoses or conditions do you have? (List specific conditions)
-        3. How often do you get upset, angry, anxious, withdrawn? (Answer: "Never", "Rarely", "Occasionally", "Often", "Almost always")
-        4. How much support do you need to manage physical challenges? (0-10 number)
-        5. What are your living arrangements? (Describe living situation)
-        6. In the last 30 days, how much was your family impacted because of your disability? (Answer: "None", "Mild", "Moderate", "Severe", "Extreme", "Not Applicable")
-        7. If we were to score your impairment restrictions (0-5 scale with 0.5 increments)
-        
+        1. Are you a new participant? (Answer: "Yes" or "No" - look for terms like "new", "first time", "returning", "existing")
+        2. What diagnoses or conditions do you have? (List specific conditions - expand abbreviations: MS→Multiple Sclerosis, COPD→Chronic Obstructive Pulmonary Disease, etc.)
+        3. How often do you get upset, angry, anxious, withdrawn? (Answer: "Never", "Rarely", "Occasionally", "Often", "Almost always" - map synonyms: "sometimes"→"Occasionally", "frequently"→"Often")
+        4. How much support do you need to manage physical challenges? (0-10 number - extract numbers mentioned like "7 out of 10" or descriptive terms mapped to numbers)
+        5. What are your living arrangements? (Describe living situation - extract who they live with, type of housing)
+        6. In the last 30 days, how much was your family impacted because of your disability? (Answer: "None", "Mild", "Moderate", "Severe", "Extreme", "Not Applicable" - map intensity terms: "a little"→"Mild", "somewhat"→"Moderate", "very"→"Severe", "extremely"→"Extreme")
+        7. If we were to score your impairment restrictions (0-5 scale with 0.5 increments - extract numbers mentioned like "3 on a 5 point scale")
+
+        IMPORTANT MAPPING RULES:
+        - "MS", "multiple sclerosis" → "Multiple Sclerosis"
+        - "sometimes", "occasionally" → "Occasionally" 
+        - "often", "frequently" → "Often"
+        - "rarely", "seldom" → "Rarely"
+        - "a little", "slightly" → "Mild"
+        - "somewhat", "moderately" → "Moderate"
+        - "very", "severely", "significantly" → "Severe"
+        - "extremely", "critically" → "Extreme"
+        - Extract numbers directly when mentioned (e.g., "7 out of 10" → 7, "3 on a 5 point scale" → 3)
+
         Return as JSON with these exact field names:
         - "introduction.new_participant"
         - "icf_impairment.diagnoses" 
@@ -283,7 +295,7 @@ def extract_answers_for_questions(text):
         - "about_you.living_situation"
         - "family.carer_wellbeing"
         - "icf_impairment.score"
-        
+
         For any information that is missing or unclear, use "Unknown".
         """
         
@@ -567,7 +579,8 @@ async def parse_audio_for_questions(file: UploadFile = File(...)):
             return {"error": "Could not transcribe audio"}
         
         print(f"✅ Transcribed {len(transcript)} characters from audio")
-        
+        print(f"📄 TRANSCRIPTION: {transcript}")  # Live Audio Transcript
+
         # Step 2: Extract answers for our specific questions
         extracted_answers = extract_answers_for_questions(transcript)
         
