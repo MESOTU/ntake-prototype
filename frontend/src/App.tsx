@@ -1,6 +1,8 @@
+import { Routes, Route, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Button, Container, TextField, Box, Typography, Alert } from '@mui/material';
-import DemoPage from './DemoPage.tsx';
+import DemoPage from './DemoPage';
+import IntakePage from './IntakePage';
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
@@ -13,12 +15,6 @@ function App() {
     primary_diagnosis: ''
   });
   const [patients, setPatients] = useState<any[]>([]);
-  const [currentView, setCurrentView] = useState<'main' | 'demo'>('main'); // ← ADD VIEW STATE
-
-  // If demo view, show DemoPage
-  if (currentView === 'demo') {
-    return <DemoPage />;
-  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -127,21 +123,33 @@ function App() {
     }
   };
 
-  return (
+  // Landing page component
+  const LandingPage = () => (
     <Container maxWidth="sm">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Disability Care Intake Prototype
         </Typography>
         
-        {/* ADD DEMO BUTTON */}
+        {/* DEMO BUTTON */}
         <Button 
           variant="outlined" 
-          onClick={() => setCurrentView('demo')}
+          component={Link}
+          to="/demo"
           fullWidth
-          sx={{ mb: 3 }}
+          sx={{ mb: 1 }}
         >
           🧪 Try AI Demo (7 Questions)
+        </Button>
+
+        <Button 
+          variant="contained" 
+          component={Link}
+          to="/intake"
+          fullWidth
+          sx={{ mb: 3 }} 
+        >
+          📋 Full Intake Form (33+ Questions)
         </Button>
 
         {/* PDF Upload Section */}
@@ -282,6 +290,14 @@ function App() {
         )}
       </Box>
     </Container>
+  );
+
+  return (
+    <Routes>
+      <Route path="/demo" element={<DemoPage />} />
+      <Route path="/intake" element={<IntakePage />} />
+      <Route path="/" element={<LandingPage />} />
+    </Routes>
   );
 }
 

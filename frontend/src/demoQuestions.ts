@@ -9,18 +9,14 @@ export const DEMO_QUESTIONS = [
     data_path: "introduction.new_participant",
     ai_extractable: true
   },
-  {
+    {
     id: "diagnoses",
     section: "icf_impairment", 
-    type: "multiple_choice",
+    type: "text",
     question_text: "What diagnoses or conditions do you have?",
-    options: [
-      "Anxiety Disorder", "Autism", "Depression", 
-      "Diabetes", "Hearing Impairment", "Other"
-    ],
     data_path: "icf_impairment.diagnoses",
     ai_extractable: true
-  },
+  },    
   {
     id: "wellbeing_frequency",
     section: "icf_wellbeing",
@@ -46,7 +42,7 @@ export const DEMO_QUESTIONS = [
     question_text: "What are your living arrangements?",
     data_path: "about_you.living_situation",
     ai_extractable: true
-  },
+  },    
   {
     id: "carer_wellbeing",
     section: "about_family",

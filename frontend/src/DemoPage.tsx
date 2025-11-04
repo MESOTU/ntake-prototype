@@ -5,6 +5,7 @@ import {
   Card, CardContent, Stepper, Step, StepLabel,
   CircularProgress
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 import { DEMO_QUESTIONS } from './demoQuestions';
 import QuestionWithAIAnswer from './QuestionWithAIAnswer';
 
@@ -272,6 +273,25 @@ const DemoPage = () => {
         <Typography variant="subtitle1" color="text.secondary" gutterBottom>
           Test how AI can extract answers from PDFs, audio files, or live recordings
         </Typography>
+
+        {/* New Navigation Section to Full Intake Form */}
+        <Box sx={{ textAlign: 'center', mb: 3, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+          <Typography variant="h6" gutterBottom>
+            Ready for the full experience?
+          </Typography>
+          <Button 
+            component={Link} 
+            to="/intake" 
+            variant="contained" 
+            color="primary"
+            size="large"
+          >
+            Go to Full Intake Form (33+ Questions)
+          </Button>
+          <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
+            Includes all sections: Introduction, About Me, About My Family, and more
+          </Typography>
+        </Box>
 
         {/* Upload Section - UPDATED with recording */}
         <Card sx={{ mb: 3 }}>

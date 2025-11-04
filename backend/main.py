@@ -337,6 +337,120 @@ def extract_answers_for_questions(text):
             "icf_impairment.score": "Unknown"
         }
 
+def extract_answers_for_intake_questions(text):
+    """Extract answers for ALL 33 intake questions from text"""
+    try:
+        prompt = f"""
+        Analyze this conversation text and extract specific information for these intake questions.
+        Map the answers to the exact question data paths provided.
+
+        TEXT TO ANALYZE:
+        {text}
+
+        EXTRACT ANSWERS FOR THESE QUESTIONS AND DATA PATHS:
+
+        INTRODUCTION SECTION:
+        - "introduction.today_date" (extract date as DD/MM/YYYY)
+        - "introduction.who_completing" (match to: Participant/client/patient, Family member/parent, Carer, Participant AND family member together, Legal guardian, Support worker, Intake team, Allied health professional, Teacher/educator, Employer/workplace)
+        - "introduction.new_participant" (Yes/No)
+        - "introduction.urgent_help" (Yes/No)
+        - "introduction.services_used" (list from: Active Community, Supported Independent Living, Specialist Disability Accommodation, Respite Care (STA, MTA), SLES Work Program, Employment, Allied Health)
+        - "introduction.active_service_location" (Home/Community/Both)
+        - "introduction.referral_source" (list from: Your COS, Your school, Someone in your healthcare team, Someone in your family, A friend, Other)
+        - "introduction.motivation" (extract text about motivation)
+        - "introduction.funding_source" (list from: NDIS, Workcover, Private/Self-funded, Aged Care/DVA funding, Other)
+        - "introduction.funding_source_other" (if Other selected, extract details)
+        - "introduction.funding_supports" (list from: Capital Supports, Capacity Building Supports, Core Supports, Other)
+        - "introduction.funding_supports_other" (if Other selected, extract details)
+
+        ABOUT ME SECTION:
+        - "about_me.year_of_birth" (extract year as number)
+        - "about_me.postcode" (extract postcode as number)
+        - "about_me.gender" (match to: Female, Male, Non-Binary, Transgender Female, Transgender Male, Prefer Not To Say, Other)
+        - "about_me.gender_other" (if Other selected, extract details)
+        - "about_me.cultural_background" (list from: Australian - from an English speaking, Anglo-Celtic background, Australian - from a culturally and linguistically diverse background, Aboriginal, Torres Strait Islander, Other)
+        - "about_me.living_arrangements" (extract text about living situation)
+        - "about_me.things_love" (extract text about likes/enjoyments)
+        - "about_me.things_dislike" (extract text about dislikes/avoidances)
+        - "about_me.friends_family_description" (extract text about personality/relationships)
+
+        ABOUT FAMILY SECTION:
+        - "about_family.family_members" (extract text about family composition)
+        - "about_family.family_relationship" (extract text about family relationships)
+        - "about_family.legal_decision_maker" (Yes/No/NA)
+        - "about_family.decision_maker_name" (if Yes, extract name)
+        - "about_family.family_activities" (extract text about family activities)
+        - "about_family.family_help" (extract text about family support)
+        - "about_family.family_impact_level" (None/Mild/Moderate/Severe/Extreme)
+        - "about_family.family_impact_ways" (extract text about impact details)
+        - "about_family.personal_story" (extract text about personal history)
+
+        RETURN AS JSON with these exact field names. For any information that is missing or unclear, use "Unknown".
+        """
+
+        client = OpenAI(api_key=openai_api_key, http_client=httpx.Client())
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1
+        )
+        
+        result_text = response.choices[0].message.content
+        
+        import json
+        try:
+            extracted_data = json.loads(result_text)
+            print(f"✅ AI extracted answers for ALL intake questions: {extracted_data}")
+            return extracted_data
+        except json.JSONDecodeError:
+            print("❌ AI didn't return valid JSON:", result_text)
+            # Return empty object for all 33 fields
+            return create_empty_intake_answers_object()
+        
+    except Exception as e:
+        print(f"❌ Error in extract_answers_for_intake_questions: {e}")
+        return create_empty_intake_answers_object()
+
+def create_empty_intake_answers_object():
+    """Create an empty answers object for all 33 intake questions"""
+    return {
+        # Introduction questions
+        "introduction.today_date": "Unknown",
+        "introduction.who_completing": "Unknown",
+        "introduction.new_participant": "Unknown",
+        "introduction.urgent_help": "Unknown",
+        "introduction.services_used": "Unknown",
+        "introduction.active_service_location": "Unknown",
+        "introduction.referral_source": "Unknown",
+        "introduction.motivation": "Unknown",
+        "introduction.funding_source": "Unknown",
+        "introduction.funding_source_other": "Unknown",
+        "introduction.funding_supports": "Unknown",
+        "introduction.funding_supports_other": "Unknown",
+        
+        # About Me questions
+        "about_me.year_of_birth": "Unknown",
+        "about_me.postcode": "Unknown",
+        "about_me.gender": "Unknown",
+        "about_me.gender_other": "Unknown",
+        "about_me.cultural_background": "Unknown",
+        "about_me.living_arrangements": "Unknown",
+        "about_me.things_love": "Unknown",
+        "about_me.things_dislike": "Unknown",
+        "about_me.friends_family_description": "Unknown",
+        
+        # About Family questions
+        "about_family.family_members": "Unknown",
+        "about_family.family_relationship": "Unknown",
+        "about_family.legal_decision_maker": "Unknown",
+        "about_family.decision_maker_name": "Unknown",
+        "about_family.family_activities": "Unknown",
+        "about_family.family_help": "Unknown",
+        "about_family.family_impact_level": "Unknown",
+        "about_family.family_impact_ways": "Unknown",
+        "about_family.personal_story": "Unknown"
+    }
+
 # Whisper Transcription Function
 def transcribe_audio(audio_file, filename=None):
     """Transcribe audio file to text using OpenAI Whisper"""
@@ -592,6 +706,80 @@ async def parse_audio_for_questions(file: UploadFile = File(...)):
         
     except Exception as e:
         print(f"❌ Error in /parse-audio-for-questions: {e}")
+        return {"error": f"Audio processing failed: {str(e)}"}
+
+# Enhanced PDF parsing for intake questions
+@app.post("/parse-pdf-for-intake")
+async def parse_pdf_for_intake(file: UploadFile = File(...)):
+    print("🟢 /parse-pdf-for-intake endpoint called")
+    try:
+        if not file.filename.endswith('.pdf'):
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Please upload a PDF file"}
+            )
+        
+        print(f"📁 Processing PDF for intake questions: {file.filename}")
+        
+        # Step 1: Extract text from PDF
+        text = extract_text_from_pdf(file.file)
+        if not text:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Could not extract text from PDF"}
+            )
+        
+        print(f"✅ Extracted {len(text)} characters from PDF")
+        
+        # Step 2: Extract answers for intake questions
+        extracted_answers = extract_answers_for_intake_questions(text)
+        
+        return JSONResponse(
+            status_code=200,
+            content={
+                "status": "success",
+                "message": "PDF processed for intake questions!",
+                "extracted_answers": extracted_answers
+            }
+        )
+        
+    except Exception as e:
+        print(f"❌ Error in /parse-pdf-for-intake: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"PDF processing failed: {str(e)}"}
+        )
+
+# Enhanced audio parsing for intake questions
+@app.post("/parse-audio-for-intake")
+async def parse_audio_for_intake(file: UploadFile = File(...)):
+    print("🟢 /parse-audio-for-intake endpoint called")
+    try:
+        allowed_types = ['.mp3', '.wav', '.m4a', '.ogg', '.mp4']
+        if not any(file.filename.lower().endswith(ext) for ext in allowed_types):
+            return {"error": "Please upload an audio file"}
+        
+        print(f"📁 Processing audio for intake questions: {file.filename}")
+        
+        # Step 1: Transcribe audio to text
+        transcript = transcribe_audio(file.file, file.filename)
+        if not transcript:
+            return {"error": "Could not transcribe audio"}
+        
+        print(f"✅ Transcribed {len(transcript)} characters from audio")
+        print(f"📄 TRANSCRIPTION: {transcript}")
+
+        # Step 2: Extract answers for intake questions
+        extracted_answers = extract_answers_for_intake_questions(transcript)
+        
+        return {
+            "status": "success",
+            "message": "Audio processed for intake questions!",
+            "extracted_answers": extracted_answers
+        }
+        
+    except Exception as e:
+        print(f"❌ Error in /parse-audio-for-intake: {e}")
         return {"error": f"Audio processing failed: {str(e)}"}
 
 # Get all patients endpoint
