@@ -341,67 +341,101 @@ def extract_answers_for_intake_questions(text):
     """Extract answers for ALL intake questions from text"""
     try:
         prompt = f"""
+
         Analyze this conversation text and extract specific information for these intake questions.
-        Use contextual understanding and medical knowledge to infer answers from descriptions, symptoms, and daily experiences.
+        Use advanced contextual understanding and medical knowledge to infer answers from both explicit statements and implied meanings from descriptions, symptoms, and daily experiences..
 
         TEXT TO ANALYZE:
         {text}
 
-        IMPORTANT INFERENCE RULES:
+        ADVANCED INFERENCE FRAMEWORK:
 
-        SCALE QUESTIONS (0-5 RATINGS):
-        - No mention of difficulty, describes full independence → 0 (None)
-        - "A little trouble", "minor issues", "slight difficulty" → 1 (Mild) 
-        - "Some difficulty", "moderate challenges", "needs occasional help" → 2 (Moderate)
-        - "Significant difficulty", "major challenges", "regular assistance needed" → 3 (Severe)
-        - "Extreme difficulty", "cannot manage alone", "constant support required" → 4 (Extreme)
-        - "Cannot do at all", "completely unable", activity not attempted → 5 (Not Applicable/Extreme)
+        SCALE RATING INTERPRETATION (0-5):
+        0 (None): No mention of difficulty, describes full independence, "no problems", "easy"
+        1 (Mild): "Minor", "slight", "a little", "barely noticeable", "manageable without help"
+        2 (Moderate): "Some", "occasional", "now and then", "moderate", "needs minimal assistance"
+        3 (Severe): "Significant", "major", "regular", "often", "frequent help needed", "struggles with"
+        4 (Extreme): "Constant", "always", "cannot manage", "completely unable", "dependent on others"
+        5 (Not Applicable): Activity not attempted, condition prevents participation entirely
 
-        YES/NO/UNSURE QUESTIONS:
-        - Mentions of support, help, assistance, caregivers, aids → "Yes"
-        - Descriptions of complete independence, no help mentioned → "No" 
-        - Mixed situations, "sometimes", "it depends", uncertainty → "Unsure"
-        - Medical equipment, devices, medications imply need for support → "Yes"
+        YES/NO INFERENCE PATTERNS:
+        YES Indicators: "Help with", "assistance for", "support to", "needs help", "requires aid", 
+                    "can't do alone", "struggles to", "finds it hard to", "depends on", 
+                    "caregiver helps", "family assists", "worker supports"
+        NO Indicators: "Independent", "manages alone", "no help needed", "self-sufficient",
+                    "does everything myself", "no assistance", "handles independently"
+        UNSURE Indicators: "Sometimes", "it depends", "varies", "good days and bad days",
+                        "uncertain", "not sure", "maybe"
 
-        SPECIFIC CONTEXT MAPPING:
+        SYMPTOM-TO-CONDITION MAPPING:
+        PHYSICAL: wheelchair, cane, walker, mobility issues, weakness, tremors, shaking,
+                fatigue, tiredness, exhaustion, balance problems, falling, dizziness,
+                pain, stiffness, muscle spasms, coordination issues
 
-        PHYSICAL CHALLENGES:
-        - Wheelchair use, mobility aids → significant physical challenges
-        - Tremors, shaking hands → fine motor difficulties
-        - Fatigue, tiredness, limited endurance → activity limitations
-        - Balance problems, falling risk → mobility challenges
-        - Weakness in limbs → strength limitations
+        COGNITIVE: memory problems, forgetting, confusion, disorientation, concentration issues,
+                distractibility, attention problems, problem-solving difficulties,
+                decision-making challenges, learning difficulties
 
-        COGNITIVE/EMOTIONAL CHALLENGES:
-        - Memory problems, forgetting → cognitive challenges
-        - Concentration issues, distractibility → attention difficulties
-        - Anxiety, worry, fear → emotional challenges
-        - Depression, sadness, low mood → emotional challenges
-        - Problem-solving difficulties → executive function challenges
+        EMOTIONAL: anxiety, worry, fear, panic attacks, depression, sadness, low mood,
+                anger, frustration, irritability, mood swings, emotional outbursts,
+                withdrawal, isolation, social anxiety
 
-        COMMUNICATION CHALLENGES:
-        - Difficulty understanding speech → receptive communication issues
-        - Trouble expressing thoughts → expressive communication issues
-        - Social anxiety, avoiding conversations → social communication challenges
+        COMMUNICATION: difficulty understanding, trouble following conversations,
+                    speech problems, stuttering, finding words, expressive difficulties,
+                    social communication challenges, avoiding conversations
 
-        PARTICIPATION INDICATORS:
-        - Attends programs, classes, work → participates in structured activities
-        - Goes to community events, outings → participates in community
-        - Has hobbies, leisure activities → participates in recreation
-        - Describes social isolation, staying home → participation restrictions
+        SENSORY: vision problems, hearing difficulties, sensitivity to light/sound,
+                sensory overload, tactile sensitivities
 
-        SUPPORT NEEDS:
-        - Personal care assistance → support needed for daily living
-        - Transportation help → support needed for community access
-        - Medication management → support needed for health
-        - Financial management → support needed for administration
-        - Emotional support, counseling → support needed for wellbeing
+        ACTIVITY PARTICIPATION INDICATORS:
+        - Structured activities: "day program", "work", "school", "classes", "therapy sessions"
+        - Community participation: "shopping", "appointments", "outings", "events", "social gatherings"
+        - Social participation: "friends", "family visits", "phone calls", "social media"
+        - Recreation: "hobbies", "leisure activities", "entertainment", "sports", "crafts"
 
-        PAY SPECIAL ATTENTION TO:
-        - Frequency words: "always", "often", "sometimes", "rarely", "never"
-        - Intensity words: "mild", "moderate", "severe", "extreme", "overwhelming"
-        - Support descriptions: "help with", "assistance for", "support to"
-        - Limitation descriptions: "cannot", "unable to", "struggle with", "challenge with"
+        SUPPORT NEEDS CLASSIFICATION:
+        - Personal care: bathing, dressing, grooming, toileting, feeding
+        - Household: cleaning, cooking, shopping, laundry, home maintenance
+        - Medical: medications, appointments, treatments, therapy exercises
+        - Mobility: transportation, transfers, walking assistance
+        - Communication: interpreters, communication devices, speech therapy
+        - Cognitive: reminders, scheduling, decision support, memory aids
+        - Emotional: counseling, emotional support, crisis management
+        - Social: social skills, relationship support, community integration
+
+        CONTEXTUAL CLUES FOR SPECIFIC QUESTIONS:
+
+        FOR WORK/SCHOOL PARTICIPATION:
+        - Mentions of employment, job, workplace, colleagues → participates in work
+        - Mentions of school, classes, studying, teachers → participates in education  
+        - Mentions of day programs, centers, structured activities → participates in structured learning
+        - Mentions of volunteering, community work → participates in productive activities
+
+        FOR DIFFICULTY LEVELS:
+        - Time-based clues: "takes longer", "needs extra time", "slow to complete" → moderate-severe difficulty
+        - Assistance clues: "with help", "with support", "needs assistance" → significant difficulty
+        - Emotional clues: "frustrating", "overwhelming", "stressful" → moderate-severe difficulty
+        - Frequency clues: "always", "often", "frequently" → consistent difficulty
+
+        FOR SUPPORT NEEDS:
+        - Equipment mentions: wheelchair, walker, communication device → equipment support needed
+        - Personal assistance: caregiver, support worker, family help → personal support needed
+        - Environmental: home modifications, accessibility features → environmental support needed
+        - Professional: therapists, doctors, specialists → professional support needed
+
+        PAY ATTENTION TO:
+        - Comparative language: "harder than before", "worse than last year", "improved since"
+        - Conditional statements: "when I'm tired", "on bad days", "if it's crowded"
+        - Frequency modifiers: "always", "often", "sometimes", "rarely", "never"
+        - Intensity descriptors: "mild", "moderate", "severe", "extreme", "overwhelming"
+        - Support terminology: "help", "assistance", "support", "aid", "care"
+
+        USE CONTEXTUAL REASONING:
+        - If someone uses a wheelchair, infer mobility challenges and potential need for accessibility supports
+        - If someone mentions memory problems, infer potential need for reminders and cognitive supports
+        - If someone describes social anxiety, infer potential participation restrictions in social settings
+        - If someone has multiple medications, infer potential need for medication management support
+        - If someone has fluctuating conditions, infer that challenges may vary day-to-day
 
         EXTRACT ANSWERS FOR THESE QUESTIONS AND DATA PATHS:
 
@@ -528,6 +562,8 @@ def extract_answers_for_intake_questions(text):
         - "icf_wellbeing.emotional_supports" (extract text about emotional supports)
         - "icf_wellbeing.unmet_supports" (extract text about unmet emotional supports)
         - "icf_wellbeing.score.score" (extract number 0-5 with 0.5 increments for wellbeing score)
+
+        IMPORTANT: When in doubt between two possible interpretations, choose the more specific and contextual one based on the overall narrative.
 
         RETURN AS JSON with these exact field names. For any information that is missing or unclear, use "Unknown".
         """

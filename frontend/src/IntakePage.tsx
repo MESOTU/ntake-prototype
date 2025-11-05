@@ -175,6 +175,9 @@ const processAIAnswersForForm = (flattenedAnswers: AIAnswers, questions: any[]):
   
   Object.entries(flattenedAnswers).forEach(([field, value]) => {
     if (value !== 'Unknown' && value !== null && value !== undefined) {
+      // Convert value to string for safe comparison
+      const stringValue = String(value);
+      
       // Find the question for this field
       const question = questions.find(q => q.data_path === field);
       
@@ -182,21 +185,21 @@ const processAIAnswersForForm = (flattenedAnswers: AIAnswers, questions: any[]):
         switch (question.type) {
           case 'single_choice':
             // For single choice, check if the AI answer matches any option exactly
-            if (question.options && question.options.includes(value)) {
-              processedData[field] = value;
-              console.log(`✅ Exact match for ${field}: "${value}"`);
+            if (question.options && question.options.includes(stringValue)) {
+              processedData[field] = stringValue;
+              console.log(`✅ Exact match for ${field}: "${stringValue}"`);
             } else {
               // If no exact match, try to find a close match
               const matchedOption = question.options?.find((option: string) => 
-                option.toLowerCase().includes(value.toLowerCase()) || 
-                value.toLowerCase().includes(option.toLowerCase())
+                option.toLowerCase().includes(stringValue.toLowerCase()) || 
+                stringValue.toLowerCase().includes(option.toLowerCase())
               );
               if (matchedOption) {
                 processedData[field] = matchedOption;
-                console.log(`🔍 Fuzzy matched "${value}" to "${matchedOption}" for ${field}`);
+                console.log(`🔍 Fuzzy matched "${stringValue}" to "${matchedOption}" for ${field}`);
               } else {
-                processedData[field] = value; // Fallback to raw value
-                console.log(`❌ No match found for ${field}: "${value}"`);
+                processedData[field] = stringValue; // Fallback to raw value
+                console.log(`❌ No match found for ${field}: "${stringValue}"`);
               }
             }
             break;
@@ -204,31 +207,31 @@ const processAIAnswersForForm = (flattenedAnswers: AIAnswers, questions: any[]):
           case 'multiple_choice':
             // For multiple choice, handle both single values and arrays
             if (Array.isArray(value)) {
-              // If it's already an array, use it directly
-              processedData[field] = value;
-            } else if (typeof value === 'string') {
-              // If it's a string, check if it matches any options
+              // If it's already an array, use it directly (but ensure all items are strings)
+              processedData[field] = value.map(item => String(item));
+            } else {
+              // If it's not an array, convert to string and try to match options
               const matchedOptions = question.options?.filter((option: string) => 
-                option.toLowerCase().includes(value.toLowerCase()) || 
-                value.toLowerCase().includes(option.toLowerCase())
+                option.toLowerCase().includes(stringValue.toLowerCase()) || 
+                stringValue.toLowerCase().includes(option.toLowerCase())
               ) || [];
               
               if (matchedOptions.length > 0) {
                 processedData[field] = matchedOptions;
-                console.log(`🔍 Multiple choice matched "${value}" to ${JSON.stringify(matchedOptions)} for ${field}`);
+                console.log(`🔍 Multiple choice matched "${stringValue}" to ${JSON.stringify(matchedOptions)} for ${field}`);
               } else {
-                processedData[field] = [value]; // Fallback to array with raw value
+                processedData[field] = [stringValue]; // Fallback to array with raw value
               }
             }
             break;
             
           default:
-            // For other types, use the value directly
-            processedData[field] = value;
+            // For other types, use the string value
+            processedData[field] = stringValue;
         }
       } else {
-        // If no question found, use value directly
-        processedData[field] = value;
+        // If no question found, use string value directly
+        processedData[field] = stringValue;
       }
     }
   });
