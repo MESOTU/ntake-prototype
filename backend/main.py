@@ -338,7 +338,7 @@ def extract_answers_for_questions(text):
         }
 
 def extract_answers_for_intake_questions(text):
-    """Extract answers for ALL 33 intake questions from text"""
+    """Extract answers for ALL intake questions from text"""
     try:
         prompt = f"""
         Analyze this conversation text and extract specific information for these intake questions.
@@ -385,6 +385,94 @@ def extract_answers_for_intake_questions(text):
         - "about_family.family_impact_ways" (extract text about impact details)
         - "about_family.personal_story" (extract text about personal history)
 
+        ICF IMPAIRMENT SECTION:
+        - "icf_impairment.diagnoses" (list from: Brain Injury/Head Injury, Anorexia, Anxiety Disorder, ADHD, Autism, Bipolar Affective Disorder, Cerebral Palsy, Chronic Fatigue/ME, COPD, Congenital abnormality/deformity, Developmental Language Disorder, Dementia, Depression, Diabetes, Downs Syndrome, Dysarthria, Dysfluency, Dysphagia, Dysphasia/Aphasia, Dyspraxia, Epilepsy, Hearing Impairment/Deafness, Incontinence, Insulin Dependent Diabetes, Learning Disability, Neurological disorder, Non Insulin Dependent Diabetes, PTSD, Sensory Processing Disorder, Stroke, RET Syndrome, Spinal Injury, Tourette's Syndrome, Vision impairment, Fragile X, Obesity)
+        - "icf_impairment.physical.challenges_description" (extract text about physical challenges)
+        - "icf_impairment.physical.challenges_worsened" (Yes/No)
+        - "icf_impairment.physical.changes_description" (extract text about physical changes)
+        - "icf_impairment.physical.monitoring_needs" (extract text about monitoring needs)
+        - "icf_impairment.body_systems.challenges" (extract text about body system challenges)
+        - "icf_impairment.body_systems.worsened" (Yes/No)
+        - "icf_impairment.body_systems.changes_description" (extract text about body system changes)
+        - "icf_impairment.body_systems.monitoring_needs" (extract text about monitoring needs)
+        - "icf_impairment.cognitive_emotional.challenges" (extract text about cognitive/emotional challenges)
+        - "icf_impairment.cognitive_emotional.worsened" (Yes/No)
+        - "icf_impairment.cognitive_emotional.changes_description" (extract text about cognitive/emotional changes)
+        - "icf_impairment.cognitive_emotional.monitoring_needs" (extract text about monitoring needs)
+        - "icf_impairment.supports_needs.current_medications" (extract text about medications)
+        - "icf_impairment.supports_needs.medication_supports" (extract text about medication supports)
+        - "icf_impairment.supports_needs.medical_specialists" (extract text about medical specialists)
+        - "icf_impairment.supports_needs.specialist_appointment_supports" (extract text about specialist appointment supports)
+        - "icf_impairment.supports_needs.therapists_therapies" (extract text about therapists/therapies)
+        - "icf_impairment.supports_needs.therapy_appointment_supports" (extract text about therapy appointment supports)
+        - "icf_impairment.supports_needs.special_diet" (extract text about special diet)
+        - "icf_impairment.supports_needs.diet_supports" (extract text about diet supports)
+        - "icf_impairment.supports_needs.environmental_supports" (extract text about environmental supports)
+        - "icf_impairment.supports_needs.equipment_needs" (extract text about equipment needs)
+        - "icf_impairment.supports_needs.equipment_usage_supports" (extract text about equipment usage supports)
+        - "icf_impairment.supports_needs.sensory_supports" (extract text about sensory supports)
+        - "icf_impairment.supports_needs.sensory_supports_usage" (extract text about sensory supports usage)
+        - "icf_impairment.unmet_needs.support_needs" (extract text about unmet support needs)
+        - "icf_impairment.impairment_score.score" (extract number 0-5 with 0.5 increments for impairment score)
+
+        ICF ACTIVITY SECTION:
+        - "icf_activity.understanding_communicating.needs_support" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.concentration_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_concentration" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.concentration_supports" (extract text about concentration supports)
+        - "icf_activity.understanding_communicating.remembering_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_remembering" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.remembering_supports" (extract text about remembering supports)
+        - "icf_activity.understanding_communicating.problem_solving_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_problem_solving" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.problem_solving_supports" (extract text about problem solving supports)
+        - "icf_activity.understanding_communicating.learning_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_learning" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.learning_supports" (extract text about learning supports)
+        - "icf_activity.understanding_communicating.understanding_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_understanding" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.understanding_supports" (extract text about understanding supports)
+        - "icf_activity.understanding_communicating.conversation_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_activity.understanding_communicating.support_conversation" (Yes/No/Unsure)
+        - "icf_activity.understanding_communicating.conversation_supports" (extract text about conversation supports)
+        - "icf_activity.understanding_communicating.unmet_supports" (extract text about unmet communication supports)
+
+        ICF PARTICIPATION SECTION:
+        - "icf_participation.school_work.participates" (Yes/No/Unsure)
+        - "icf_participation.school_work.daily_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.school_work.support_daily" (Yes/No/Unsure)
+        - "icf_participation.school_work.daily_supports" (extract text about daily work/school supports)
+        - "icf_participation.school_work.important_tasks_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.school_work.support_important_tasks" (Yes/No/Unsure)
+        - "icf_participation.school_work.important_tasks_supports" (extract text about important tasks supports)
+        - "icf_participation.school_work.completing_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.school_work.support_completing" (Yes/No/Unsure)
+        - "icf_participation.school_work.completing_supports" (extract text about completing work supports)
+        - "icf_participation.school_work.speed_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.school_work.support_speed" (Yes/No/Unsure)
+        - "icf_participation.school_work.speed_supports" (extract text about work speed supports)
+        - "icf_participation.school_work.unmet_supports" (extract text about unmet school/work supports)
+        - "icf_participation.community.problems_support" (Yes/No/Unsure)
+        - "icf_participation.community.joining_difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.community.supports" (extract text about community supports)
+        - "icf_participation.community.unmet_supports" (extract text about unmet community supports)
+        - "icf_participation.relaxation.difficulty" (0-5: None/Mild/Moderate/Severe/Extreme/Not Applicable)
+        - "icf_participation.relaxation.support" (Yes/No/Unsure)
+        - "icf_participation.relaxation.supports" (extract text about relaxation supports)
+        - "icf_participation.relaxation.unmet_supports" (extract text about unmet relaxation supports)
+        - "icf_participation.other.limitations" (Yes/No/Unsure)
+        - "icf_participation.other.limitations_details" (extract text about other participation limitations)
+        - "icf_participation.score.score" (extract number 0-5 with 0.5 increments for participation score)
+
+        ICF WELL-BEING SECTION:
+        - "icf_wellbeing.emotional_frequency" (0-5: Never/Rarely/Sometimes/Often/Very often/All the time)
+        - "icf_wellbeing.emotional_intensity" (0-5: No intensity/Mild/Moderate/High/Very high/Extreme)
+        - "icf_wellbeing.emotional_experience" (extract text about emotional experiences)
+        - "icf_wellbeing.emotional_triggers" (extract text about emotional triggers)
+        - "icf_wellbeing.emotional_supports" (extract text about emotional supports)
+        - "icf_wellbeing.unmet_supports" (extract text about unmet emotional supports)
+        - "icf_wellbeing.score.score" (extract number 0-5 with 0.5 increments for wellbeing score)
+
         RETURN AS JSON with these exact field names. For any information that is missing or unclear, use "Unknown".
         """
 
@@ -404,7 +492,7 @@ def extract_answers_for_intake_questions(text):
             return extracted_data
         except json.JSONDecodeError:
             print("❌ AI didn't return valid JSON:", result_text)
-            # Return empty object for all 33 fields
+            # Return empty object for all fields
             return create_empty_intake_answers_object()
         
     except Exception as e:
@@ -412,7 +500,7 @@ def extract_answers_for_intake_questions(text):
         return create_empty_intake_answers_object()
 
 def create_empty_intake_answers_object():
-    """Create an empty answers object for all 33 intake questions"""
+    """Create an empty answers object for all intake questions"""
     return {
         # Introduction questions
         "introduction.today_date": "Unknown",
@@ -448,7 +536,95 @@ def create_empty_intake_answers_object():
         "about_family.family_help": "Unknown",
         "about_family.family_impact_level": "Unknown",
         "about_family.family_impact_ways": "Unknown",
-        "about_family.personal_story": "Unknown"
+        "about_family.personal_story": "Unknown",
+
+        # ICF Impairment Section
+        "icf_impairment.diagnoses": "Unknown",
+        "icf_impairment.physical.challenges_description": "Unknown",
+        "icf_impairment.physical.challenges_worsened": "Unknown",
+        "icf_impairment.physical.changes_description": "Unknown",
+        "icf_impairment.physical.monitoring_needs": "Unknown",
+        "icf_impairment.body_systems.challenges": "Unknown",
+        "icf_impairment.body_systems.worsened": "Unknown",
+        "icf_impairment.body_systems.changes_description": "Unknown",
+        "icf_impairment.body_systems.monitoring_needs": "Unknown",
+        "icf_impairment.cognitive_emotional.challenges": "Unknown",
+        "icf_impairment.cognitive_emotional.worsened": "Unknown",
+        "icf_impairment.cognitive_emotional.changes_description": "Unknown",
+        "icf_impairment.cognitive_emotional.monitoring_needs": "Unknown",
+        "icf_impairment.supports_needs.current_medications": "Unknown",
+        "icf_impairment.supports_needs.medication_supports": "Unknown",
+        "icf_impairment.supports_needs.medical_specialists": "Unknown",
+        "icf_impairment.supports_needs.specialist_appointment_supports": "Unknown",
+        "icf_impairment.supports_needs.therapists_therapies": "Unknown",
+        "icf_impairment.supports_needs.therapy_appointment_supports": "Unknown",
+        "icf_impairment.supports_needs.special_diet": "Unknown",
+        "icf_impairment.supports_needs.diet_supports": "Unknown",
+        "icf_impairment.supports_needs.environmental_supports": "Unknown",
+        "icf_impairment.supports_needs.equipment_needs": "Unknown",
+        "icf_impairment.supports_needs.equipment_usage_supports": "Unknown",
+        "icf_impairment.supports_needs.sensory_supports": "Unknown",
+        "icf_impairment.supports_needs.sensory_supports_usage": "Unknown",
+        "icf_impairment.unmet_needs.support_needs": "Unknown",
+        "icf_impairment.impairment_score.score": "Unknown",
+
+        # ICF Activity Section
+        "icf_activity.understanding_communicating.needs_support": "Unknown",
+        "icf_activity.understanding_communicating.concentration_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_concentration": "Unknown",
+        "icf_activity.understanding_communicating.concentration_supports": "Unknown",
+        "icf_activity.understanding_communicating.remembering_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_remembering": "Unknown",
+        "icf_activity.understanding_communicating.remembering_supports": "Unknown",
+        "icf_activity.understanding_communicating.problem_solving_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_problem_solving": "Unknown",
+        "icf_activity.understanding_communicating.problem_solving_supports": "Unknown",
+        "icf_activity.understanding_communicating.learning_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_learning": "Unknown",
+        "icf_activity.understanding_communicating.learning_supports": "Unknown",
+        "icf_activity.understanding_communicating.understanding_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_understanding": "Unknown",
+        "icf_activity.understanding_communicating.understanding_supports": "Unknown",
+        "icf_activity.understanding_communicating.conversation_difficulty": "Unknown",
+        "icf_activity.understanding_communicating.support_conversation": "Unknown",
+        "icf_activity.understanding_communicating.conversation_supports": "Unknown",
+        "icf_activity.understanding_communicating.unmet_supports": "Unknown",
+
+        # ICF Participation Section
+        "icf_participation.school_work.participates": "Unknown",
+        "icf_participation.school_work.daily_difficulty": "Unknown",
+        "icf_participation.school_work.support_daily": "Unknown",
+        "icf_participation.school_work.daily_supports": "Unknown",
+        "icf_participation.school_work.important_tasks_difficulty": "Unknown",
+        "icf_participation.school_work.support_important_tasks": "Unknown",
+        "icf_participation.school_work.important_tasks_supports": "Unknown",
+        "icf_participation.school_work.completing_difficulty": "Unknown",
+        "icf_participation.school_work.support_completing": "Unknown",
+        "icf_participation.school_work.completing_supports": "Unknown",
+        "icf_participation.school_work.speed_difficulty": "Unknown",
+        "icf_participation.school_work.support_speed": "Unknown",
+        "icf_participation.school_work.speed_supports": "Unknown",
+        "icf_participation.school_work.unmet_supports": "Unknown",
+        "icf_participation.community.problems_support": "Unknown",
+        "icf_participation.community.joining_difficulty": "Unknown",
+        "icf_participation.community.supports": "Unknown",
+        "icf_participation.community.unmet_supports": "Unknown",
+        "icf_participation.relaxation.difficulty": "Unknown",
+        "icf_participation.relaxation.support": "Unknown",
+        "icf_participation.relaxation.supports": "Unknown",
+        "icf_participation.relaxation.unmet_supports": "Unknown",
+        "icf_participation.other.limitations": "Unknown",
+        "icf_participation.other.limitations_details": "Unknown",
+        "icf_participation.score.score": "Unknown",
+
+        # ICF Well-being Section
+        "icf_wellbeing.emotional_frequency": "Unknown",
+        "icf_wellbeing.emotional_intensity": "Unknown",
+        "icf_wellbeing.emotional_experience": "Unknown",
+        "icf_wellbeing.emotional_triggers": "Unknown",
+        "icf_wellbeing.emotional_supports": "Unknown",
+        "icf_wellbeing.unmet_supports": "Unknown",
+        "icf_wellbeing.score.score": "Unknown"
     }
 
 # Whisper Transcription Function
