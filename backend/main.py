@@ -342,10 +342,66 @@ def extract_answers_for_intake_questions(text):
     try:
         prompt = f"""
         Analyze this conversation text and extract specific information for these intake questions.
-        Map the answers to the exact question data paths provided.
+        Use contextual understanding and medical knowledge to infer answers from descriptions, symptoms, and daily experiences.
 
         TEXT TO ANALYZE:
         {text}
+
+        IMPORTANT INFERENCE RULES:
+
+        SCALE QUESTIONS (0-5 RATINGS):
+        - No mention of difficulty, describes full independence → 0 (None)
+        - "A little trouble", "minor issues", "slight difficulty" → 1 (Mild) 
+        - "Some difficulty", "moderate challenges", "needs occasional help" → 2 (Moderate)
+        - "Significant difficulty", "major challenges", "regular assistance needed" → 3 (Severe)
+        - "Extreme difficulty", "cannot manage alone", "constant support required" → 4 (Extreme)
+        - "Cannot do at all", "completely unable", activity not attempted → 5 (Not Applicable/Extreme)
+
+        YES/NO/UNSURE QUESTIONS:
+        - Mentions of support, help, assistance, caregivers, aids → "Yes"
+        - Descriptions of complete independence, no help mentioned → "No" 
+        - Mixed situations, "sometimes", "it depends", uncertainty → "Unsure"
+        - Medical equipment, devices, medications imply need for support → "Yes"
+
+        SPECIFIC CONTEXT MAPPING:
+
+        PHYSICAL CHALLENGES:
+        - Wheelchair use, mobility aids → significant physical challenges
+        - Tremors, shaking hands → fine motor difficulties
+        - Fatigue, tiredness, limited endurance → activity limitations
+        - Balance problems, falling risk → mobility challenges
+        - Weakness in limbs → strength limitations
+
+        COGNITIVE/EMOTIONAL CHALLENGES:
+        - Memory problems, forgetting → cognitive challenges
+        - Concentration issues, distractibility → attention difficulties
+        - Anxiety, worry, fear → emotional challenges
+        - Depression, sadness, low mood → emotional challenges
+        - Problem-solving difficulties → executive function challenges
+
+        COMMUNICATION CHALLENGES:
+        - Difficulty understanding speech → receptive communication issues
+        - Trouble expressing thoughts → expressive communication issues
+        - Social anxiety, avoiding conversations → social communication challenges
+
+        PARTICIPATION INDICATORS:
+        - Attends programs, classes, work → participates in structured activities
+        - Goes to community events, outings → participates in community
+        - Has hobbies, leisure activities → participates in recreation
+        - Describes social isolation, staying home → participation restrictions
+
+        SUPPORT NEEDS:
+        - Personal care assistance → support needed for daily living
+        - Transportation help → support needed for community access
+        - Medication management → support needed for health
+        - Financial management → support needed for administration
+        - Emotional support, counseling → support needed for wellbeing
+
+        PAY SPECIAL ATTENTION TO:
+        - Frequency words: "always", "often", "sometimes", "rarely", "never"
+        - Intensity words: "mild", "moderate", "severe", "extreme", "overwhelming"
+        - Support descriptions: "help with", "assistance for", "support to"
+        - Limitation descriptions: "cannot", "unable to", "struggle with", "challenge with"
 
         EXTRACT ANSWERS FOR THESE QUESTIONS AND DATA PATHS:
 
