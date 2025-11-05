@@ -73,20 +73,47 @@ const QuestionWithAIAnswer = ({ question, value, aiAnswer, onChange }: QuestionW
           </FormGroup>
         );
       
+      //case 'scale':
+      //  const scaleRange = question.scale_range || { min: 0, max: 10, step: 1 };
+      //  return (
+      //    <Box sx={{ width: '100%', px: 2 }}>
+      //      <Slider
+      //        value={value || scaleRange.min}
+      //        onChange={(_, newValue) => onChange(newValue)}
+      //        min={scaleRange.min}
+      //        max={scaleRange.max}
+      //        step={scaleRange.step || 1}
+      //        valueLabelDisplay="auto"
+      //      />
+      //    </Box>
+      //  );
+
       case 'scale':
-        const scaleRange = question.scale_range || { min: 0, max: 10, step: 1 };
-        return (
-          <Box sx={{ width: '100%', px: 2 }}>
-            <Slider
-              value={value || scaleRange.min}
-              onChange={(_, newValue) => onChange(newValue)}
-              min={scaleRange.min}
-              max={scaleRange.max}
-              step={scaleRange.step || 1}
-              valueLabelDisplay="auto"
-            />
-          </Box>
-        );
+  const scaleRange = question.scale_range || { min: 0, max: 10, step: 1 };
+  const step = scaleRange.step || 1; // Handle undefined step
+  
+  // Create marks for each step
+  const marks = [];
+  for (let i = scaleRange.min; i <= scaleRange.max; i += step) {
+    marks.push({
+      value: i,
+      label: i.toString(),
+    });
+  }
+  
+  return (
+    <Box sx={{ width: '100%', px: 2 }}>
+      <Slider
+        value={value || scaleRange.min}
+        onChange={(_, newValue) => onChange(newValue)}
+        min={scaleRange.min}
+        max={scaleRange.max}
+        step={step}
+        valueLabelDisplay="auto"
+        marks={marks}
+      />
+    </Box>
+  );
       
       case 'text':
         return (
@@ -133,6 +160,21 @@ const QuestionWithAIAnswer = ({ question, value, aiAnswer, onChange }: QuestionW
               pb: 1, 
               borderBottom: '2px solid',
               borderColor: 'primary.main'
+            }}
+          >
+            {question.question_text}
+          </Typography>
+        );
+
+      case 'subheading':
+        return (
+          <Typography 
+            variant="body1" 
+            color="text.primary"
+            sx={{ 
+              mt: 2, 
+              mb: 2,
+              lineHeight: 1.6
             }}
           >
             {question.question_text}

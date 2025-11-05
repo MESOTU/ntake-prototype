@@ -335,7 +335,7 @@ const IntakePage = () => {
   };
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
           Full Intake Assessment
@@ -414,6 +414,12 @@ const IntakePage = () => {
                 key={section} 
                 label={section.replace(/_/g, ' ').toUpperCase()}
                 id={`section-tab-${index}`}
+                sx={{ 
+                  color: 'white', // Force white text
+                  '&.Mui-selected': {
+                  color: 'white', // Keep white when selected
+                }
+              }}
               />
             ))}
           </Tabs>

@@ -149,7 +149,7 @@ function App() {
           fullWidth
           sx={{ mb: 3 }} 
         >
-          📋 Full Intake Form (33+ Questions)
+          📋 Full Intake Form (ALL Questions)
         </Button>
 
         {/* PDF Upload Section */}

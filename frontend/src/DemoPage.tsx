@@ -286,7 +286,7 @@ const DemoPage = () => {
             color="primary"
             size="large"
           >
-            Go to Full Intake Form (33+ Questions)
+            Go to Full Intake Form (All Questions)
           </Button>
           <Typography variant="body2" sx={{ mt: 1 }} color="text.secondary">
             Includes all sections: Introduction, About Me, About My Family, and more
